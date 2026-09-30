@@ -11,6 +11,8 @@ from prometheus_client import start_http_server, Gauge
 PS = "/sys/class/power_supply"
 
 g = {
+    "core_temp_c": Gauge("laptop_core_temp_c", "Per-core / package temperature C", ["core"]),
+    "nvme_temp_c": Gauge("laptop_nvme_temp_c", "NVMe SSD temperature C", ["device", "sensor"]),
     "capacity_pct": Gauge("laptop_battery_capacity_pct", "Battery charge percent", ["battery"]),
     "energy_wh": Gauge("laptop_battery_energy_wh", "Battery energy Wh", ["battery", "type"]),
     "health_pct": Gauge("laptop_battery_health_pct", "Battery full/design capacity percent", ["battery"]),
@@ -126,6 +128,31 @@ def collect_misc_temps():
                 g["temp_c"].labels(src).set(round(t, 1))
 
 
+def collect_core_temps():
+    """All coretemp sensors: package + per-core, mobile CPUs have many cores."""
+    for h in glob.glob("/sys/class/hwmon/hwmon*"):
+        if read(h + "/name") != "coretemp":
+            continue
+        for lf in glob.glob(h + "/temp*_label"):
+            label = read(lf)
+            t = num2(inp_path(lf), 1e-3)
+            if label and t is not None:
+                g["core_temp_c"].labels(label.replace(" ", "_").lower()).set(round(t, 1))
+
+
+def collect_nvme_temps():
+    """NVMe SSD composite + auxiliary sensor temps."""
+    for h in glob.glob("/sys/class/hwmon/hwmon*"):
+        if read(h + "/name") != "nvme":
+            continue
+        dev = os.path.basename(os.path.dirname(os.path.realpath(h)))
+        for lf in glob.glob(h + "/temp*_label"):
+            label = read(lf) or "composite"
+            t = num2(inp_path(lf), 1e-3)
+            if t is not None:
+                g["nvme_temp_c"].labels(dev, label.replace(" ", "_").lower()).set(round(t, 1))
+
+
 def main():
     start_http_server(9835)
     while True:
@@ -133,6 +160,8 @@ def main():
         collect_cpu_temp()
         collect_fans()
         collect_misc_temps()
+        collect_core_temps()
+        collect_nvme_temps()
         import time
         time.sleep(10)
 
