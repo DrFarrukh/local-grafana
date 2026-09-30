@@ -1,0 +1,134 @@
+{
+  "title": "Laptop Health",
+  "uid": "laptop-health",
+  "tags": ["laptop"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "gauge", "title": "Battery charge %",
+      "gridPos": { "x": 0, "y": 0, "w": 5, "h": 7 },
+      "targets": [{ "expr": "laptop_battery_capacity_pct", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null }, { "color": "orange", "value": 20 }, { "color": "green", "value": 60 }
+          ]}
+        }, "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true }
+    },
+    {
+      "id": 2, "type": "gauge", "title": "Battery health (full/design)",
+      "gridPos": { "x": 5, "y": 0, "w": 5, "h": 7 },
+      "targets": [{ "expr": "laptop_battery_health_pct", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 120, "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null }, { "color": "orange", "value": 70 }, { "color": "green", "value": 85 }
+          ]}
+        }, "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 3, "type": "gauge", "title": "CPU temperature",
+      "gridPos": { "x": 10, "y": 0, "w": 4, "h": 7 },
+      "targets": [{ "expr": "laptop_cpu_temp_c", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 30, "max": 100, "unit": "celsius",
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null }, { "color": "orange", "value": 75 }, { "color": "red", "value": 90 }
+          ]}
+        }, "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 4, "type": "stat", "title": "AC / power draw",
+      "gridPos": { "x": 14, "y": 0, "w": 10, "h": 7 },
+      "targets": [
+        { "expr": "laptop_ac_online", "refId": "A", "legendFormat": "AC plugged" },
+        { "expr": "laptop_battery_power_w", "refId": "B", "legendFormat": "battery power W" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value", "options": {
+                "1": { "text": "ON AC", "color": "green", "index": 0 },
+                "0": { "text": "ON BATTERY", "color": "orange", "index": 1 }
+              }
+            }
+          ],
+          "unit": "watt", "decimals": 2
+        }, "overrides": [
+          { "matcher": { "id": "byName", "options": "AC plugged" },
+            "properties": [ { "id": "unit", "value": "bool" } ] }
+        ]
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Battery energy (Wh)",
+      "gridPos": { "x": 0, "y": 7, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "laptop_battery_energy_wh", "refId": "A", "legendFormat": "{{battery}} {{type}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "watth" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "CPU temp °C",
+      "gridPos": { "x": 12, "y": 7, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "laptop_cpu_temp_c", "refId": "A", "legendFormat": "cpu" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "celsius" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "CPU / RAM / load (node exporter)",
+      "gridPos": { "x": 0, "y": 15, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "(1 - avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[1m]))) * 100", "refId": "A", "legendFormat": "cpu busy %" },
+        { "expr": "100 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100", "refId": "B", "legendFormat": "ram used %" },
+        { "expr": "node_load1", "refId": "C", "legendFormat": "load1" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Disks (throughput)",
+      "gridPos": { "x": 12, "y": 15, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(node_disk_read_bytes_total[1m])", "refId": "A", "legendFormat": "{{device}} read" },
+        { "expr": "rate(node_disk_written_bytes_total[1m])", "refId": "B", "legendFormat": "{{device}} write" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Network (per interface)",
+      "gridPos": { "x": 0, "y": 23, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(node_network_receive_bytes_total{device!~\"lo|veth.*|br.*\"}[1m])", "refId": "A", "legendFormat": "{{device}} rx" },
+        { "expr": "rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|br.*\"}[1m])", "refId": "B", "legendFormat": "{{device}} tx" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Fan speed",
+      "gridPos": { "x": 12, "y": 23, "w": 12, "h": 8 },
+      "targets": [ { "expr": "laptop_fan_rpm", "refId": "A", "legendFormat": "{{fan}}" } ],
+      "fieldConfig": { "defaults": { "unit": "rothz" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    }
+  ]
+}

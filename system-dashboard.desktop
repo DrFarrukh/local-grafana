@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=System Dashboard
+Comment=CPU, RAM, GPU, battery health overview (Grafana-style)
+Exec=/home/qureshi/.battery-monitor/open-dashboard.sh
+Icon=org.gnome.Settings-system-symbolic
+Terminal=false
+Categories=System;Utility;
