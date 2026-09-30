@@ -1,0 +1,12 @@
+[Unit]
+Description=Laptop battery and hardware Prometheus exporter
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/local_grafana/battery_exporter.py
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target
