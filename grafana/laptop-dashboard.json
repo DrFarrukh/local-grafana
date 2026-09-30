@@ -124,10 +124,13 @@
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
     },
     {
-      "id": 10, "type": "timeseries", "title": "Fan speed",
+      "id": 10, "type": "timeseries", "title": "Temperatures: CPU / PCH / ACPI zone",
       "gridPos": { "x": 12, "y": 23, "w": 12, "h": 8 },
-      "targets": [ { "expr": "laptop_fan_rpm", "refId": "A", "legendFormat": "{{fan}}" } ],
-      "fieldConfig": { "defaults": { "unit": "rothz" }, "overrides": [] },
+      "targets": [
+        { "expr": "laptop_cpu_temp_c", "refId": "A", "legendFormat": "CPU package" },
+        { "expr": "laptop_temp_c", "refId": "B", "legendFormat": "{{source}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "celsius" }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
     }
   ]

@@ -19,6 +19,7 @@ g = {
     "cycles": Gauge("laptop_battery_cycles", "Battery cycle count", ["battery"]),
     "ac_online": Gauge("laptop_ac_online", "1 if AC connected", []),
     "cpu_temp_c": Gauge("laptop_cpu_temp_c", "CPU package temperature C", []),
+    "temp_c": Gauge("laptop_temp_c", "Misc temperature C", ["source"]),
     "fan_rpm": Gauge("laptop_fan_rpm", "Fan speed rpm", ["fan"]),
 }
 
@@ -114,12 +115,24 @@ def collect_fans():
             g["fan_rpm"].labels(f"fan{i}").set(r)
 
 
+def collect_misc_temps():
+    """PCH and ACPI thermal-zone temperatures, portable across laptops."""
+    for h in glob.glob("/sys/class/hwmon/hwmon*"):
+        name = read(h + "/name")
+        if name in ("pch_skylake", "pch_cnl", "pch_cmp", "acpitz"):
+            src = "pch" if name.startswith("pch") else "acpitz"
+            t = num2(h + "/temp1_input", 1e-3)
+            if t is not None:
+                g["temp_c"].labels(src).set(round(t, 1))
+
+
 def main():
     start_http_server(9835)
     while True:
         collect()
         collect_cpu_temp()
         collect_fans()
+        collect_misc_temps()
         import time
         time.sleep(10)
 
